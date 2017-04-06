@@ -7,6 +7,9 @@ function Hero(game, x, y){
 
 Hero.prototype = Object.create(Phaser.Sprite.prototype);
 Hero.prototype.constructor = Hero;
+Hero.prototype.move = function (direction){
+	this.x += direction * 2.5; // 2.5 pixels each frame
+};
 
 //load game assets here
 PlayState.preload = function(){
@@ -42,6 +45,28 @@ PlayState._spawnPlatform = function (platform){
 PlayState._spawnCharacters = function (data){
 	this.hero = new Hero(this.game, data.hero.x, data.hero.y);
 	this.game.add.existing(this.hero);
+};
+
+PlayState.init = function (){
+	//fixes blur movement
+	//this.game.renderer.renderSession.roundPixels = true;
+
+	this.keys = this.game.input.keyboard.addKeys({
+		left: Phaser.KeyCode.LEFT,
+		right: Phaser.KeyCode.RIGHT
+	});
+};
+
+PlayState.update = function(){
+	this._handleInput();
+};
+
+PlayState._handleInput = function(){
+	if(this.keys.left.isDown){
+		this.hero.move(-1);
+	}else if(this.keys.right.isDown){
+		this.hero.move(1);
+	}
 };
 
 //entry point
