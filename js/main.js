@@ -75,6 +75,8 @@ PlayState.preload = function(){
 	this.game.load.image('grass:1x1', 'images/grass_1x1.png');
 	this.game.load.image('hero', 'images/hero_stopped.png');
 	this.game.load.image('invisible_wall', 'images/invisible_wall.png');
+	this.game.load.image('icon:coin', 'images/coin_icon.png');
+	this.game.load.image('font:numbers', 'images/numbers.png');
 
 	//animations load
 	this.game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
@@ -95,7 +97,22 @@ PlayState.create = function(){
 	}
 	this.game.add.image(0, 0, 'background');
 	this._loadLevel(this.game.cache.getJSON('level:1'));
+	this._createHud();
 };
+
+PlayState._createHud = function(){
+	const NUMBERS_STR = '0123456789X';
+	this.coinFont = this.game.add.retroFont('font:numbers', 20, 26, NUMBERS_STR, 6);
+	let coinIcon = this.game.make.image(0, 0, 'icon:coin');
+
+	let coinScoreImg = this.game.make.image(coinIcon.x + coinIcon.width, coinIcon.height / 2, this.coinFont);
+	coinScoreImg.anchor.set(0, 0.5);
+
+	this.hud = this.game.add.group();
+	this.hud.add(coinIcon);
+	this.hud.add(coinScoreImg);
+	this.hud.position.set(10, 10);
+}
 
 PlayState._loadLevel = function(data){
 	const GRAVITY = 1200;
@@ -173,11 +190,14 @@ PlayState.init = function (){
 			this.sfx.jump.play();
 		}
 	}, this);
+
+	this.coinPickupCount = 0;
 };
 
 PlayState.update = function(){
 	this._handleCollisions();
 	this._handleInput();
+	this.coinFont.text = `x${this.coinPickupCount}`;
 };
 
 PlayState._handleCollisions = function(){
@@ -191,6 +211,7 @@ PlayState._handleCollisions = function(){
 PlayState._onHeroVsCoins = function (hero, coin){
 	coin.kill();
 	this.sfx.coin.play();
+	this.coinPickupCount++;
 };
 
 PlayState._onHeroVsEnemy = function (hero, enemy){
