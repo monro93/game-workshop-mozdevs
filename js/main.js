@@ -1,4 +1,5 @@
 PlayState = {};
+const LEVEL_COUNT = 2;
 
 function Hero(game, x, y){
 	Phaser.Sprite.call(this, game, x, y, 'hero');
@@ -98,8 +99,11 @@ Spider.prototype.die = function(){
 
 //load game assets here
 PlayState.preload = function(){
-	//images load
+	//level load
+	this.game.load.json('level:0', 'data/level00.json');
 	this.game.load.json('level:1', 'data/level01.json');
+
+	//images load
 	this.game.load.image('background', 'images/background.png');
 	this.game.load.image('ground', 'images/ground.png');
 	this.game.load.image('grass:8x1', 'images/grass_8x1.png');
@@ -137,7 +141,7 @@ PlayState.create = function(){
 		stomp: this.game.add.audio('sfx:stomp')
 	}
 	this.game.add.image(0, 0, 'background');
-	this._loadLevel(this.game.cache.getJSON('level:1'));
+	this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
 	this._createHud();
 };
 
@@ -243,7 +247,8 @@ PlayState._spwanKey = function (x, y){
 		.start();
 };
 
-PlayState.init = function (){
+
+PlayState.init = function (data){
 	//fixes blur movement
 	this.game.renderer.renderSession.roundPixels = true;
 
@@ -261,6 +266,8 @@ PlayState.init = function (){
 
 	this.coinPickupCount = 0;
 	this.hasKey = false;
+	this.level = (data.level || 0) % LEVEL_COUNT;
+
 };
 
 PlayState.update = function(){
@@ -300,7 +307,7 @@ PlayState._onHeroVsEnemy = function (hero, enemy){
 		this.sfx.stomp.play();
 	}else{ //game over
 		this.sfx.stomp.play();
-		this.game.state.restart();
+		this.game.state.restart(true, false, {level: this.level});
 	}
 	
 };
@@ -313,7 +320,7 @@ PlayState._onHeroVsKey = function(hero, key){
 
 PlayState._onHeroVsDoor = function (hero, door){
 	this.sfx.door.play();
-	this.game.state.restart();
+	this.game.state.restart(true, false, {level: this.level+1});
 }
 
 PlayState._handleInput = function(){
@@ -330,5 +337,5 @@ PlayState._handleInput = function(){
 window.onload = function(){
 	let game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
 	game.state.add('play', PlayState);
-	game.state.start('play');
+	game.state.start('play', true, false, {level: 0}); //keeps cache, wipe current entities 
 };
