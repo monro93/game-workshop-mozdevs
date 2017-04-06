@@ -9,15 +9,27 @@ function Hero(game, x, y){
 
 Hero.prototype = Object.create(Phaser.Sprite.prototype);
 Hero.prototype.constructor = Hero;
+
 Hero.prototype.move = function (direction){
 	const SPEED = 200;
 	this.body.velocity.x = direction * SPEED;
 };
 
+Hero.prototype.jump = function(){
+	const JUMP_SPEED = 600;
+	let canJump = this.body.touching.down;
+
+	if(canJump){
+		this.body.velocity.y = -JUMP_SPEED;
+	}
+
+	return canJump;
+}
+
 //load game assets here
 PlayState.preload = function(){
+	//images load
 	this.game.load.json('level:1', 'data/level01.json');
-
 	this.game.load.image('background', 'images/background.png');
 	this.game.load.image('ground', 'images/ground.png');
 	this.game.load.image('grass:8x1', 'images/grass_8x1.png');
@@ -26,10 +38,16 @@ PlayState.preload = function(){
 	this.game.load.image('grass:2x1', 'images/grass_2x1.png');
 	this.game.load.image('grass:1x1', 'images/grass_1x1.png');
 	this.game.load.image('hero', 'images/hero_stopped.png');
+
+	//audio load
+	this.game.load.audio('sfx:jump', 'audio/jump.wav');
 };
 
 //create game entities and set upt wolrd here
 PlayState.create = function(){
+	this.sfx = {
+		jump: this.game.add.audio('sfx:jump')
+	}
 	this.game.add.image(0, 0, 'background');
 	this._loadLevel(this.game.cache.getJSON('level:1'));
 };
@@ -66,8 +84,15 @@ PlayState.init = function (){
 
 	this.keys = this.game.input.keyboard.addKeys({
 		left: Phaser.KeyCode.LEFT,
-		right: Phaser.KeyCode.RIGHT
+		right: Phaser.KeyCode.RIGHT,
+		up: Phaser.KeyCode.UP
 	});
+
+	this.keys.up.onDown.add(function(){
+		if(this.hero.jump()){
+			this.sfx.jump.play();
+		}
+	}, this);
 };
 
 PlayState.update = function(){
@@ -87,6 +112,8 @@ PlayState._handleInput = function(){
 	}else{//stop
 		this.hero.move(0);
 	}
+
+
 };
 
 //entry point
